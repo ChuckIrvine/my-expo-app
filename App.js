@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { SafeAreaView, Text, TextInput, Button, FlatList, StyleSheet, Alert } from 'react-native';
+import { FlatList, StyleSheet, Alert, View } from 'react-native';
+import { Provider as PaperProvider, Title, TextInput, Button, Text } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from './supabase';
 
 export default function App() {
@@ -66,59 +68,107 @@ export default function App() {
     else { setEditingId(null); setEditText(''); fetchItems(); }
   }
 
-  if (loading) return <SafeAreaView style={styles.container}><Text>Loading...</Text></SafeAreaView>;
+  if (loading) return (
+    <PaperProvider>
+      <SafeAreaView style={styles.container}>
+        <Title>Loading...</Title>
+      </SafeAreaView>
+    </PaperProvider>
+  );
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>{isSignUp ? 'Sign Up' : 'Log In'}</Text>
-        <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Email" autoCapitalize="none" keyboardType="email-address" />
-        <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry autoCapitalize="none" />
-        <Button title={isSignUp ? 'Sign Up' : 'Log In'} onPress={isSignUp ? signUp : logIn} />
-        <Button title={`Switch to ${isSignUp ? 'Log In' : 'Sign Up'}`} onPress={() => setIsSignUp(!isSignUp)} />
-      </SafeAreaView>
+      <PaperProvider>
+        <SafeAreaView style={styles.container}>
+          <Title>{isSignUp ? 'Sign Up' : 'Log In'}</Title>
+          <TextInput
+            mode="outlined"
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={styles.input}
+          />
+          <TextInput
+            mode="outlined"
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            style={styles.input}
+          />
+          <Button mode="contained" onPress={isSignUp ? signUp : logIn} style={styles.button}>
+            {isSignUp ? 'Sign Up' : 'Log In'}
+          </Button>
+          <Button mode="text" onPress={() => setIsSignUp(!isSignUp)}>
+            Switch to {isSignUp ? 'Log In' : 'Sign Up'}
+          </Button>
+        </SafeAreaView>
+      </PaperProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Items List</Text>
-      <Button title="Log Out" onPress={logOut} />
-      <TextInput style={styles.input} value={newItem} onChangeText={setNewItem} placeholder="Add new item" />
-      <Button title="Add" onPress={addItem} />
-      <FlatList
-        data={items}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => (
-          <SafeAreaView style={styles.itemRow}>
-            {editingId === item.id ? (
-              <>
-                <TextInput
-                  style={styles.itemInput}
-                  value={editText}
-                  onChangeText={setEditText}
-                  autoFocus
-                />
-                <Button title="Save" onPress={() => updateItem(item.id)} />
-              </>
-            ) : (
-              <>
-                <Text style={styles.item} onPress={() => { setEditingId(item.id); setEditText(item.name); }}>{item.name}</Text>
-                <Button title="Delete" onPress={() => deleteItem(item.id)} />
-              </>
-            )}
-          </SafeAreaView>
-        )}
-      />
-    </SafeAreaView>
+    <PaperProvider>
+      <SafeAreaView style={styles.container}>
+        <Title>Items List</Title>
+        <Button mode="text" onPress={logOut}>Log Out</Button>
+        <TextInput
+          mode="outlined"
+          label="Add new item"
+          value={newItem}
+          onChangeText={setNewItem}
+          style={styles.input}
+        />
+        <Button mode="contained" onPress={addItem} style={styles.button}>Add</Button>
+        <FlatList
+          data={items}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.itemRow}>
+              {editingId === item.id ? (
+                <>
+                  <TextInput
+                    mode="outlined"
+                    value={editText}
+                    onChangeText={setEditText}
+                    autoFocus
+                    style={styles.itemInput}
+                  />
+                  <Button mode="contained" onPress={() => updateItem(item.id)}>Save</Button>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.item} onPress={() => { setEditingId(item.id); setEditText(item.name); }}>
+                    {item.name}
+                  </Text>
+                  <Button mode="text" onPress={() => deleteItem(item.id)}>Delete</Button>
+                </>
+              )}
+            </View>
+          )}
+        />
+      </SafeAreaView>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
-  input: { borderWidth: 1, padding: 8, marginBottom: 10, width: '100%' },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10 },
-  item: { fontSize: 18 },
-  itemInput: { flex: 1, borderWidth: 1, padding: 5, marginRight: 10 },
+  input: { marginBottom: 10 },
+  button: { marginBottom: 10 },
+  itemRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingVertical: 2,
+    marginVertical: 0
+  },
+  item: { 
+    fontSize: 18,
+    margin: 0
+  },
+  itemInput: { flex: 1, marginRight: 10 },
 });
