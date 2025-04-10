@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FlatList, StyleSheet, Alert, View } from 'react-native';
-import { Provider as PaperProvider, Title, TextInput, Button, Text } from 'react-native-paper';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Provider as PaperProvider, Title, TextInput, Button, Text, Portal, Dialog, Paragraph } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from './supabase';
 
@@ -14,6 +14,8 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -55,10 +57,13 @@ export default function App() {
     else { setNewItem(''); fetchItems(); }
   }
 
-  async function deleteItem(id) {
-    const { error } = await supabase.from('items').delete().eq('id', id);
+  async function deleteItem() {
+    if (!itemToDelete) return;
+    const { error } = await supabase.from('items').delete().eq('id', itemToDelete.id);
     if (error) console.error(error);
     else fetchItems();
+    setDeleteDialogVisible(false);
+    setItemToDelete(null);
   }
 
   async function updateItem(id) {
@@ -67,6 +72,16 @@ export default function App() {
     if (error) console.error(error);
     else { setEditingId(null); setEditText(''); fetchItems(); }
   }
+
+  const showDeleteDialog = (item) => {
+    setItemToDelete(item);
+    setDeleteDialogVisible(true);
+  };
+
+  const hideDeleteDialog = () => {
+    setDeleteDialogVisible(false);
+    setItemToDelete(null);
+  };
 
   if (loading) return (
     <PaperProvider>
@@ -144,12 +159,24 @@ export default function App() {
                   <Text style={styles.item} onPress={() => { setEditingId(item.id); setEditText(item.name); }}>
                     {item.name}
                   </Text>
-                  <Button mode="text" onPress={() => deleteItem(item.id)}>Delete</Button>
+                  <Button mode="text" onPress={() => showDeleteDialog(item)}>Delete</Button>
                 </>
               )}
             </View>
           )}
         />
+        <Portal>
+          <Dialog visible={deleteDialogVisible} onDismiss={hideDeleteDialog}>
+            <Dialog.Title>Confirm Delete</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>Are you sure you want to delete "{itemToDelete?.name}"?</Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={hideDeleteDialog}>Cancel</Button>
+              <Button onPress={deleteItem}>Delete</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
       </SafeAreaView>
     </PaperProvider>
   );
