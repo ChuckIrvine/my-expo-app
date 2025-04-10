@@ -3,12 +3,10 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { Provider as PaperProvider, Title, TextInput, Button, Text, Portal, Dialog, Paragraph } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from './supabase';
+import LoginScreen from './components/LoginScreen'; // Adjust path as needed
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -32,16 +30,12 @@ export default function App() {
     else setItems(data);
   }
 
-  async function signUp() {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) Alert.alert('Error', error.message);
-    else Alert.alert('Success', 'Check your email to confirm!');
+  async function signUp({ email, password }) {
+    return await supabase.auth.signUp({ email, password });
   }
 
-  async function logIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) Alert.alert('Error', error.message);
-    else fetchItems();
+  async function logIn({ email, password }) {
+    return await supabase.auth.signInWithPassword({ email, password });
   }
 
   async function logOut() {
@@ -94,33 +88,7 @@ export default function App() {
   if (!user) {
     return (
       <PaperProvider>
-        <SafeAreaView style={styles.container}>
-          <Title>{isSignUp ? 'Sign Up' : 'Log In'}</Title>
-          <TextInput
-            mode="outlined"
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={styles.input}
-          />
-          <TextInput
-            mode="outlined"
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            style={styles.input}
-          />
-          <Button mode="contained" onPress={isSignUp ? signUp : logIn} style={styles.button}>
-            {isSignUp ? 'Sign Up' : 'Log In'}
-          </Button>
-          <Button mode="text" onPress={() => setIsSignUp(!isSignUp)}>
-            Switch to {isSignUp ? 'Log In' : 'Sign Up'}
-          </Button>
-        </SafeAreaView>
+        <LoginScreen onLogin={logIn} onSignUp={signUp} />
       </PaperProvider>
     );
   }
