@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, Button } from 'react-native';
+import { FlatList, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, ActivityIndicator, Card, Title, Paragraph, IconButton } from 'react-native-paper';
 
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkc21kb3VzdXZjaXlsZHNleHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMDY4NDAsImV4cCI6MjA1OTc4Mjg0MH0.RJYgWhSaTKVP6zVwR_ctEuLh5_M9n7jV2WFeNkY3C5k';
 const FUNCTION_URL = 'https://cdsmdousuvciyldsexvl.supabase.co/functions/v1/manage-users';
@@ -42,7 +44,6 @@ const UsersScreen = () => {
   };
 
   const deleteUser = async (userId) => {
-    // Confirm deletion with the user
     Alert.alert(
       'Delete User',
       'Are you sure you want to delete this user?',
@@ -71,7 +72,6 @@ const UsersScreen = () => {
               }
 
               if (success) {
-                // Refresh the user list after deletion
                 Alert.alert('Success', 'User deleted successfully');
                 fetchUsers();
               }
@@ -88,23 +88,29 @@ const UsersScreen = () => {
   };
 
   const renderUserItem = ({ item }) => (
-    <View style={styles.userItem}>
-      <Text style={styles.userText}>ID: {item.id}</Text>
-      <Text style={styles.userText}>Email: {item.email}</Text>
-      <Button
-        title="Delete"
-        color="red"
-        onPress={() => deleteUser(item.id)}
-        disabled={loading}
-      />
-    </View>
+    <Card style={styles.userItem}>
+      <Card.Content style={styles.cardContent}>
+        <Title style={styles.userText}>ID: {item.id}</Title>
+        <Paragraph style={styles.userText}>Email: {item.email}</Paragraph>
+        <IconButton
+          icon="delete"
+          iconColor="red"
+          size={24}
+          onPress={() => deleteUser(item.id)}
+          disabled={loading}
+          style={styles.deleteButton}
+        />
+      </Card.Content>
+    </Card>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Users</Text>
+    <SafeAreaView style={styles.container}>
+      <Text variant="headlineMedium" style={styles.title}>
+        Users
+      </Text>
 
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      {loading && <ActivityIndicator size="large" />}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       {!loading && !error && (
@@ -113,16 +119,16 @@ const UsersScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderUserItem}
           ListEmptyComponent={<Text>No users found.</Text>}
+          contentContainerStyle={styles.listContainer}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#f5f5f5',
   },
   title: {
@@ -131,20 +137,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
   userItem: {
-    padding: 15,
     marginVertical: 5,
     backgroundColor: '#fff',
     borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
     elevation: 2,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   userText: {
     fontSize: 16,
     marginBottom: 5,
+  },
+  deleteButton: {
+    marginLeft: 'auto',
   },
   errorText: {
     color: 'red',
